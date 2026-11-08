@@ -10,6 +10,8 @@
   let selected = 0;
   let opener = null;
   let restoringFocus = false;
+  let closingByUser = false;
+  let filmRequest = 0;
   let pageLock = null;
   function lockPage() {
     if (pageLock) return;
@@ -32,6 +34,23 @@
     document.documentElement.style.scrollBehavior = previous.scrollBehavior;
   }
   const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+  const projector = document.querySelector('[data-projector]');
+  let projectorVisible = !('IntersectionObserver' in window);
+  function syncProjector() {
+    if (projector) projector.dataset.running = String(projectorVisible && !reduced.matches && !document.hidden && !dialog.open);
+  }
+  if (projector) {
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(entries => {
+        projectorVisible = entries[0].isIntersecting;
+        syncProjector();
+      }).observe(projector);
+    }
+    reduced.addEventListener('change', syncProjector);
+    window.addEventListener('pageshow', syncProjector);
+    window.addEventListener('pagehide', () => { projector.dataset.running = 'false'; });
+    syncProjector();
+  }
   const previews = Array.from(document.querySelectorAll('.project-open')).map(link => ({
     link,
     video: link.querySelector('.project-preview'),
@@ -96,6 +115,7 @@
 
   previews.forEach(preview => {
     preview.control?.addEventListener('click', () => {
+      window.portfolioSound?.play(activePreview === preview ? 'close' : 'open');
       if (activePreview === preview) stopPreview(preview);
       else startPreview(preview, true);
     });
@@ -149,11 +169,17 @@
     if (event.key === 'Escape' && !dialog.open) stopPreviews();
   });
 
-  function showFilm(index) {
+  function showFilm(index, fromProjector = false) {
+    const request = ++filmRequest;
+    if (!dialog.open) window.portfolioSound?.play('open');
     stopPreviews();
     restoringFocus = true;
     selected = index;
     const project = projects[index];
+    if (projector) {
+      dialog.classList.toggle('is-projector-launch', fromProjector && !reduced.matches);
+      projector.querySelectorAll('[data-projector-key]').forEach(key => key.classList.toggle('is-selected', key.dataset.film === project.id));
+    }
     error.hidden = true;
     dialog.querySelector('#film-title').textContent = project.title;
     dialog.querySelector('#film-subtitle').textContent = project.subtitle;
@@ -166,13 +192,22 @@
     if (!dialog.open) {
       lockPage();
       dialog.showModal();
-      if (!reduced.matches && finePointer.matches && window.matchMedia('(min-width: 700px)').matches) dialog.querySelector('.film-shell').animate([
+      if (!fromProjector && !reduced.matches && finePointer.matches && window.matchMedia('(min-width: 700px)').matches) dialog.querySelector('.film-shell').animate([
         {clipPath: 'inset(12% 5% 12% 5%)', transform: 'translateY(24px)'},
         {clipPath: 'inset(0%)', transform: 'translateY(0)'}
       ], {duration: 620, easing: 'cubic-bezier(.22,.8,.2,1)'});
     }
+    syncProjector();
     dialog.scrollTop = 0;
-    video.play().catch(() => {});
+    const source = video.src;
+    const playbackFailed = reason => {
+      // A pause, film switch or navigation can reject an older play request.
+      // Only the current, visible film should show its direct-play recovery.
+      if (reason?.name === 'AbortError' || request !== filmRequest ||
+          !dialog.open || document.hidden || video.src !== source) return;
+      error.hidden = false;
+    };
+    try {video.play()?.catch(playbackFailed);} catch (reason) {playbackFailed(reason);}
   }
   document.querySelectorAll('[data-film]').forEach(link => {
     link.addEventListener('click', event => {
@@ -181,27 +216,35 @@
       if (index < 0) return;
       event.preventDefault();
       opener = link;
-      showFilm(index);
+      showFilm(index, link.dataset.projectorKey !== undefined);
     });
   });
-  dialog.querySelector('.close-film').addEventListener('click', () => dialog.close());
+  dialog.querySelector('.close-film').addEventListener('click', () => {closingByUser = true; dialog.close();});
+  dialog.addEventListener('cancel', () => {closingByUser = true;});
   dialog.querySelector('.next-film').addEventListener('click', () => showFilm((selected + 1) % projects.length));
   dialog.addEventListener('click', event => {
     if (event.target !== dialog) return;
     const box = dialog.getBoundingClientRect();
-    if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) dialog.close();
+    if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) {closingByUser = true; dialog.close();}
   });
   dialog.addEventListener('close', () => {
+    filmRequest++;
+    const playClose = closingByUser && !document.hidden;
+    closingByUser = false;
+    if (projector) dialog.classList.remove('is-projector-launch');
     video.pause();
     video.removeAttribute('src');
     video.load();
+    if (playClose) window.portfolioSound?.play('close');
     unlockPage();
     restoringFocus = true;
     opener?.focus({preventScroll: true});
     requestAnimationFrame(() => { restoringFocus = false; });
+    syncProjector();
   });
   video.addEventListener('error', () => { if (dialog.open && video.getAttribute('src')) error.hidden = false; });
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden) { video.pause(); stopPreviews(); }
+    if (document.hidden) { filmRequest++; video.pause(); stopPreviews(); }
+    syncProjector();
   });
 })();

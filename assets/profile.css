@@ -1,0 +1,43 @@
+/* Original organisation marks sit beside the written name; the role remains
+   the first thing to read. Dark wells preserve white wordmarks on cyan rows. */
+.page-profile .organization-identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  margin-top: 14px;
+}
+.page-profile .organization-identity .timeline-organization {
+  min-width: 0;
+  margin: 0;
+}
+.page-profile .organization-logo {
+  display: grid;
+  place-items: center;
+  flex: 0 0 60px;
+  width: 60px;
+  height: 60px;
+  padding: 7px;
+  background: var(--bg);
+  border: 1px solid var(--quiet-line);
+}
+.page-profile .organization-logo.is-wide {
+  flex-basis: 108px;
+  width: 108px;
+  padding: 9px;
+}
+.page-profile .organization-logo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+/* This official file includes a broad transparent canvas around the mark. */
+.page-profile .organization-logo img[src$="zingroll.png"] {transform: scale(1.35)}
+.page-profile .is-current .organization-logo {border-color: var(--on-accent)}
+.page-profile .education-section .timeline-location {margin-top: 14px}
+@media (max-width: 379px) {
+  .page-profile .organization-identity {gap: 10px}
+  .page-profile .organization-logo {flex-basis: 52px; width: 52px; height: 52px}
+  .page-profile .organization-logo.is-wide {flex-basis: 88px; width: 88px; padding: 8px}
+}

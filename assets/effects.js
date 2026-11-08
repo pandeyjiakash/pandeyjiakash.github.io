@@ -49,7 +49,9 @@
     }, 310));
   }
 
-  function activate(element) {
+  function activate(element, cue) {
+    const semanticAction = element.dataset && ('serviceShuffle' in element.dataset || 'serviceChoice' in element.dataset || 'film' in element.dataset);
+    if (cue && !(cue === 'glitch' && semanticAction) && !glitchTimers.has(element)) window.portfolioSound?.play(cue);
     pulseGlitch(element);
     element.querySelectorAll('[data-scramble]').forEach(scramble);
   }
@@ -58,17 +60,17 @@
     let tap = null;
     resetTouchCandidates.push(() => { tap = null; });
     trigger.addEventListener('pointerdown', event => {
-      if (event.pointerType !== 'touch' && event.pointerType !== 'pen') return;
+      if (event.isPrimary === false || (event.pointerType !== 'touch' && event.pointerType !== 'pen')) return;
       tap = {id: event.pointerId, x: event.clientX, y: event.clientY};
     }, {passive: true});
     trigger.addEventListener('pointermove', event => {
-      if (tap && Math.hypot(event.clientX - tap.x, event.clientY - tap.y) > 12) tap = null;
+      if (tap && tap.id === event.pointerId && Math.hypot(event.clientX - tap.x, event.clientY - tap.y) > 12) tap = null;
     }, {passive: true});
-    trigger.addEventListener('pointercancel', () => { tap = null; });
+    trigger.addEventListener('pointercancel', event => { if (tap?.id === event.pointerId) tap = null; });
     trigger.addEventListener('pointerup', event => {
       if (!tap || tap.id !== event.pointerId) return;
       tap = null;
-      activate(trigger);
+      activate(trigger, 'glitch');
       if (reduced.matches) return;
       clearTimeout(touchTimers.get(trigger));
       trigger.classList.add('is-touch-active');
@@ -79,7 +81,7 @@
     }, {passive: true});
     trigger.addEventListener('pointerenter', event => {
       if (!finePointer.matches || event.pointerType === 'touch') return;
-      activate(trigger);
+      activate(trigger, 'hover');
     });
     trigger.addEventListener('focus', () => {
       if (!tap && trigger.matches(':focus-visible')) activate(trigger);
@@ -106,7 +108,18 @@
     const viewport = brandStrip.querySelector('.brand-viewport');
     const brandLinks = [...brandStrip.querySelectorAll('.brand-link')];
     let touchPointer = null;
+    let brandTap = null;
     let keyboardNavigation = false;
+    brandStrip.addEventListener('pointerenter', event => {
+      if (finePointer.matches && event.pointerType === 'mouse') window.portfolioSound?.play('glitch');
+    });
+    brandStrip.addEventListener('click', event => {
+      const cancelled = brandTap?.cancelled;
+      const deliberateTouch = brandTap || event.pointerType === 'touch' || event.pointerType === 'pen';
+      brandTap = null;
+      if (cancelled || event.defaultPrevented || event.button > 0 || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return;
+      if (deliberateTouch || event.detail === 0) window.portfolioSound?.play('glitch');
+    });
     document.addEventListener('keydown', event => { if (event.key === 'Tab') keyboardNavigation = true; });
     brandStrip.addEventListener('focusin', () => {
       if (keyboardNavigation) brandStrip.dataset.keyboardFocus = 'true';
@@ -118,16 +131,21 @@
     function clearBrandTouch() {
       clearTimeout(touchTimer);
       touchPointer = null;
+      brandTap = null;
       brandStrip.classList.remove('is-touch-active');
     }
     brandStrip.addEventListener('pointerdown', event => {
       keyboardNavigation = false;
       delete brandStrip.dataset.keyboardFocus;
-      if (event.pointerType !== 'touch' && event.pointerType !== 'pen') return;
+      if (event.isPrimary === false || (event.pointerType !== 'touch' && event.pointerType !== 'pen')) return;
       clearTimeout(touchTimer);
       touchPointer = event.pointerId;
+      brandTap = {id:event.pointerId,x:event.clientX,y:event.clientY,cancelled:false};
       brandStrip.classList.add('is-touch-active');
     }, {passive: true});
+    document.addEventListener('pointermove', event => {
+      if (brandTap?.id === event.pointerId && Math.hypot(event.clientX-brandTap.x,event.clientY-brandTap.y)>12) brandTap.cancelled = true;
+    }, {passive:true});
     document.addEventListener('pointerup', event => {
       if (event.pointerId !== touchPointer) return;
       touchPointer = null;
@@ -198,6 +216,7 @@
     reduced.addEventListener('change', syncBrands);
     document.addEventListener('visibilitychange', syncBrands);
     document.addEventListener('visibilitychange', () => { if (document.hidden) clearBrandTouch(); });
+    window.addEventListener('pagehide', clearBrandTouch);
     syncBrands();
     scheduleBrandPixels();
   }
@@ -220,11 +239,13 @@
     else pixel.addEventListener('load', markReady, {once: true});
     portrait.addEventListener('pointerenter', event => {
       if (!finePointer.matches || event.pointerType === 'touch') return;
+      const wasShowingPixels = portrait.dataset.pixelMode === 'true';
       pointerInside = true;
       keyboardInside = false;
       touchSelected = false;
       renderPortrait();
       pulseGlitch(portrait);
+      if (!wasShowingPixels && portrait.dataset.pixelMode === 'true') window.portfolioSound?.play('glitch');
     });
     portrait.addEventListener('pointerdown', event => {
       lastPointerType = event.pointerType;
@@ -236,6 +257,9 @@
     // Native click fires for a completed tap, but is cancelled by a scrolling swipe.
     // Track pointerdown as well: some Safari versions emit a MouseEvent for click.
     portrait.addEventListener('click', event => {
+      // A cancelled swipe in the hidden-gesture controller must not toggle it.
+      if (event.defaultPrevented) return;
+      const previousMode = portrait.dataset.pixelMode;
       if (event.detail === 0) {
         const wasShowingPixels = portrait.dataset.pixelMode === 'true';
         pointerInside = false;
@@ -248,11 +272,23 @@
         touchSelected = !touchSelected;
       } else return;
       renderPortrait();
+      if (previousMode !== portrait.dataset.pixelMode) window.portfolioSound?.play('glitch');
       if (portrait.dataset.pixelMode === 'true') pulseGlitch(portrait);
     });
     portrait.addEventListener('pointerleave', () => { pointerInside = false; renderPortrait(); });
     portrait.addEventListener('focus', () => { keyboardInside = portrait.matches(':focus-visible'); renderPortrait(); });
     portrait.addEventListener('blur', () => { keyboardInside = false; renderPortrait(); });
+    // A hybrid device can lose its mouse or hide the page without delivering
+    // pointerleave. Clear only transient modes, preserving deliberate tap state.
+    const clearTransientPortrait = () => {
+      pointerInside = false;
+      keyboardInside = false;
+      renderPortrait();
+    };
+    finePointer.addEventListener('change', () => {if (!finePointer.matches) clearTransientPortrait();});
+    window.addEventListener('blur', clearTransientPortrait);
+    window.addEventListener('pagehide', clearTransientPortrait);
+    document.addEventListener('visibilitychange', () => {if (document.hidden) clearTransientPortrait();});
     portrait.addEventListener('keydown', event => {
       if (event.key === 'Escape') {
         keyboardInside = false;
@@ -265,6 +301,9 @@
 
   const experienceEntries = [...document.querySelectorAll('.experience-entry')];
   if (experienceEntries.length) {
+    // Compact layouts keep the native disclosure, including when a phone or
+    // tablet has a mouse attached. Hover-only drawers belong to the wide layout.
+    const experienceHover = window.matchMedia('(min-width: 800px) and (hover: hover) and (pointer: fine)');
     let hoveredEntry = null;
     let pendingEntry = null;
     let dismissedEntry = null;
@@ -277,18 +316,21 @@
       pendingEntry = null;
     }
 
-    function closeHovered() {
+    function closeHovered(userInitiated = false) {
       clearTimeout(closeTimer);
       closeTimer = 0;
       const previous = hoveredEntry;
       hoveredEntry = null;
-      if (previous && !previous.querySelector('summary').matches(':focus-visible')) previous.open = false;
+      if (previous && !previous.querySelector('summary').matches(':focus-visible')) {
+        if (userInitiated && previous.open) window.portfolioSound?.play('close');
+        previous.open = false;
+      }
     }
 
     function leaveExperience() {
       cancelPending();
       if (!hoveredEntry) return;
-      if (!closeTimer) closeTimer = setTimeout(closeHovered, 120);
+      if (!closeTimer) closeTimer = setTimeout(() => closeHovered(true), 120);
     }
 
     function revealExperience(entry) {
@@ -300,17 +342,18 @@
       cancelPending();
       pendingEntry = entry;
       openTimer = setTimeout(() => {
-        if (pendingEntry !== entry || !finePointer.matches) return;
+        if (pendingEntry !== entry || !experienceHover.matches) return;
         pendingEntry = null;
         openTimer = 0;
         hoveredEntry = entry;
+        if (!entry.open) window.portfolioSound?.play('open');
         entry.open = true;
       }, 90);
     }
 
     // Actual pointer motion avoids opening adjacent jobs when a drawer changes layout.
     document.addEventListener('pointermove', event => {
-      if (!finePointer.matches || event.pointerType === 'touch' || event.buttons) return;
+      if (!experienceHover.matches || event.pointerType !== 'mouse' || event.buttons) return;
       let entry = event.target instanceof Element ? event.target.closest('.experience-entry') : null;
       if (!entry && hoveredEntry) {
         const box = hoveredEntry.getBoundingClientRect();
@@ -329,10 +372,12 @@
       let pointerType = 'mouse';
       summary.addEventListener('pointerdown', event => { pointerType = event.pointerType; });
       summary.addEventListener('click', event => {
-        if (finePointer.matches && pointerType === 'mouse' && event.detail > 0) {
+        if (event.defaultPrevented) return;
+        if (experienceHover.matches && (event.pointerType || pointerType) === 'mouse' && event.detail > 0) {
           event.preventDefault();
           return;
         }
+        window.portfolioSound?.play(entry.open ? 'close' : 'open');
         if (entry.open) {
           dismissedEntry = entry;
           if (hoveredEntry === entry) hoveredEntry = null;
@@ -342,6 +387,7 @@
       entry.addEventListener('toggle', () => { if (entry.open) pulseGlitch(entry); });
       entry.addEventListener('keydown', event => {
         if (event.key !== 'Escape') return;
+        if (entry.open) window.portfolioSound?.play('close');
         cancelPending();
         dismissedEntry = entry;
         if (hoveredEntry === entry) hoveredEntry = null;
@@ -353,28 +399,14 @@
       cancelPending();
       closeHovered();
       dismissedEntry = null;
-      experienceEntries.forEach(entry => { entry.dataset.hoverEnabled = String(finePointer.matches); });
+      experienceEntries.forEach(entry => { entry.dataset.hoverEnabled = String(experienceHover.matches); });
     }
-    finePointer.addEventListener('change', updateExperienceMode);
+    experienceHover.addEventListener('change', updateExperienceMode);
     updateExperienceMode();
+    window.addEventListener('pagehide', () => { cancelPending(); closeHovered(); });
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) { cancelPending(); closeHovered(); }
     });
   }
 
-  const journeyData = document.getElementById('journey-data');
-  const journey = document.querySelector('.journey-widget');
-  if (journey && journeyData) {
-    const chapters = JSON.parse(journeyData.textContent);
-    const detail = journey.querySelector('[data-chapter-detail]');
-    journey.querySelectorAll('[data-chapter]').forEach(button => {
-      button.addEventListener('click', () => {
-        const chapter = chapters[button.dataset.chapter];
-        if (!chapter) return;
-        journey.querySelectorAll('[data-chapter]').forEach(item => item.setAttribute('aria-pressed', String(item === button)));
-        detail.textContent = chapter;
-        pulseGlitch(journey);
-      });
-    });
-  }
 })();
