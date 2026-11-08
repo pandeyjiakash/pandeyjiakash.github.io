@@ -1,0 +1,52 @@
+.services-section {padding-block:var(--section-space);scroll-margin-top:24px}
+.services-heading {display:flex;align-items:center;justify-content:space-between;gap:24px;margin-bottom:32px}
+.services-heading :is(h1,h2) {font-family:var(--font-display);font-size:clamp(40px,6vw,80px);line-height:1;letter-spacing:-.04em;font-weight:600;max-width:12ch}
+.service-heading-word {white-space:nowrap}
+.service-heading-word [data-scramble] {display:inline-block}
+.services-signal {font-size:clamp(36px,5vw,64px);line-height:1;color:var(--accent)}
+.services-grid {display:grid;grid-template-columns:minmax(0,1fr);gap:24px;padding-inline:4px}
+.service-sheet {--sheet-angle:-.6deg;position:relative;padding:20px;background:var(--surface);border:1px solid var(--line);transform:rotate(var(--sheet-angle));transition:transform .18s steps(2,end),border-color .18s;isolation:isolate;min-width:0}
+.service-sheet:after {content:'';position:absolute;inset:-4px 4px 4px -4px;border:1px solid var(--quiet-line);pointer-events:none;z-index:-1}
+.service-production {--sheet-angle:.6deg;background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.service-production:after {border-color:var(--ink)}
+.service-meta {display:flex;align-items:center;justify-content:space-between;gap:16px;color:var(--accent);margin-bottom:16px}
+.service-meta .ui-icon {width:26px;height:26px}
+.service-production .service-meta {color:var(--on-accent)}
+.service-sheet :is(h2,h3) {font-size:28px;font-weight:500;line-height:1.12;letter-spacing:-.03em;padding-bottom:16px;border-bottom:1px solid var(--line);overflow-wrap:anywhere}
+.service-production h3 {border-color:var(--on-accent)}
+.service-sheet ul {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px;list-style:none;padding:0;margin:16px 0 0}
+.service-sheet li {position:relative;padding-left:12px;font-size:14px;line-height:1.55;color:var(--muted);overflow-wrap:anywhere}
+.service-sheet li:before {content:'';position:absolute;left:0;top:.6em;width:3px;height:3px;background:var(--accent)}
+.service-production li {color:var(--on-accent)}
+.service-production li:before {background:var(--on-accent)}
+.services-bottom {display:flex;align-items:start;flex-direction:column;gap:12px;padding-top:24px;margin-top:32px;border-top:1px solid var(--quiet-line)}
+.services-bottom>.mono {font-size:12px;line-height:1.8;color:var(--muted);max-width:100%}
+.services-bottom>.mono>span {color:var(--accent);padding-inline:4px}
+.services-bottom .quiet-link {font-size:14px;gap:16px;max-width:100%}
+.services-bottom .quiet-link>span {font-size:20px;line-height:1}
+@media(min-width:600px) {
+  .services-grid {grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+  .service-sheet {padding:24px}
+  .service-sheet ul {grid-template-columns:minmax(0,1fr)}
+  .service-post-production {grid-column:1/-1}
+  .service-post-production ul {grid-template-columns:repeat(2,minmax(0,1fr))}
+  .service-sheet li {font-size:16px}
+}
+@media(min-width:1000px) {
+  .services-grid {grid-template-columns:repeat(3,minmax(0,1fr));gap:32px}
+  .service-post-production {grid-column:auto}
+  .service-post-production ul {grid-template-columns:minmax(0,1fr)}
+  .service-sheet {padding:clamp(24px,2vw,32px)}
+  .service-sheet :is(h2,h3) {font-size:clamp(27px,2.5vw,36px);min-height:2.7em}
+  .services-bottom {align-items:center;justify-content:space-between;flex-direction:row;gap:24px}
+}
+@media(hover:hover) {
+  .service-sheet:hover {border-color:var(--accent);transform:rotate(0) translateY(-3px)}
+  .service-production:hover {border-color:var(--ink)}
+}
+.service-sheet.is-touch-active {border-color:var(--accent);transform:rotate(0) translateY(-3px)}
+.service-production.is-touch-active {border-color:var(--ink)}
+.service-sheet.is-glitching:before {content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(transparent 48%,rgb(0 240 255 / .18) 49% 50%,transparent 51%);animation:service-scan .3s steps(3,end)}
+@media(max-width:420px) {.service-sheet ul {grid-template-columns:minmax(0,1fr)}.service-sheet li {font-size:16px}}
+@keyframes service-scan {from{clip-path:inset(0 0 80%)}to{clip-path:inset(80% 0 0)}}
+@media(prefers-reduced-motion:reduce) {.service-sheet{transition:none}.service-sheet.is-glitching:before{animation:none;display:none}}

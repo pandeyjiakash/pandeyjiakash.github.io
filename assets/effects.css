@@ -1,0 +1,47 @@
+/* Interaction styling only. All adaptive geometry lives in styles.css. */
+.ui-icon {display:inline-block;width:20px;height:20px;flex:0 0 auto;vertical-align:middle}
+.site-nav [data-scramble],.wordmark [data-scramble],.page-heading [data-scramble],.work-fill [data-scramble] {display:inline-block}
+[data-scramble] {white-space:nowrap}
+[data-scrambling] {text-shadow:-2px 0 rgb(0 240 255 / .5),2px 0 rgb(243 252 253 / .35)}
+.hero-offer {margin-top:20px;padding-left:16px;border-left:1px solid var(--accent)}
+.hero-offer p {font-weight:500}
+.hero-offer mark {background:var(--accent);color:var(--on-accent);padding:.03em .2em;white-space:nowrap;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.portrait-frame,.project-card {transform:rotate(var(--angle,0deg));transition:transform .15s steps(2,end)}
+.project-open.is-touch-active .double-frame {box-shadow:5px 6px 0 var(--accent)}
+.site-nav a.is-touch-active:after {transform:scaleX(1)}
+.glitch-surface {position:relative;isolation:isolate;overflow:hidden}
+.glitch-surface:before,.glitch-surface:after {content:'';position:absolute;inset:0;background-image:var(--glitch-image);background-size:100% 100%;opacity:0;pointer-events:none;z-index:3}
+.glitch-surface:after {filter:contrast(1.3) saturate(.35);mix-blend-mode:screen}
+.is-glitching .glitch-surface:before {animation:slice-jump .3s steps(1,end)}
+.is-glitching .glitch-surface:after {animation:signal-slice .3s steps(1,end)}
+@keyframes slice-jump {0%,100%{opacity:0;transform:translateX(0);clip-path:inset(0)}14%{opacity:.95;transform:translateX(7px);clip-path:inset(13% 0 72% 0)}35%{opacity:.95;transform:translateX(-9px);clip-path:inset(54% 0 27% 0)}60%{opacity:.8;transform:translateX(5px);clip-path:inset(80% 0 9% 0)}82%{opacity:.7;transform:translateX(-4px);clip-path:inset(31% 0 60% 0)}}
+@keyframes signal-slice {0%,100%{opacity:0;transform:translateX(0);clip-path:inset(0)}23%{opacity:.55;transform:translateX(-5px);clip-path:inset(69% 0 28% 0)}46%{opacity:.65;transform:translateX(8px);clip-path:inset(24% 0 70% 0)}74%{opacity:.4;transform:translateX(-6px);clip-path:inset(45% 0 52% 0)}}
+.portrait-hover {display:block;width:100%;position:relative;cursor:pointer;appearance:none;-webkit-appearance:none;border-radius:0;text-align:left;touch-action:manipulation}
+.portrait-hover:focus-visible {outline:2px solid var(--accent);outline-offset:7px}
+.portrait-image {display:block;aspect-ratio:1;background:var(--media)}
+.portrait-image>img {width:100%;height:100%;object-fit:cover}
+.portrait-image>.pixel-portrait {position:absolute;inset:0;opacity:0;image-rendering:pixelated;z-index:1}
+.portrait-hover[data-pixel-mode=true] .portrait-original {opacity:0}
+.portrait-hover[data-pixel-mode=true] .pixel-portrait {opacity:1}
+.journey-widget.is-glitching .journey-detail {text-shadow:2px 0 rgb(0 240 255 / .4)}
+.experience-entry[data-hover-enabled=true] .experience-toggle-icon {display:none}
+.experience-toggle {list-style:none;cursor:pointer}
+.experience-toggle::-webkit-details-marker {display:none}
+.experience-toggle::marker {content:''}
+.experience-toggle h3 {text-decoration-color:currentColor;text-underline-offset:6px;text-decoration-thickness:1px}
+.experience-toggle-icon {position:absolute;right:0;top:24px;display:block;width:30px;height:30px;border:1px solid var(--line);color:var(--accent)}
+.experience-toggle-icon:before,.experience-toggle-icon:after {content:'';position:absolute;left:8px;top:13px;width:12px;height:1px;background:currentColor}
+.experience-toggle-icon:after {transform:rotate(90deg);transition:transform .16s steps(2,end)}
+.experience-toggle.is-current .experience-toggle-icon {right:20px;border-color:var(--on-accent);color:var(--on-accent)}
+.experience-entry[open] .experience-toggle-icon:after {transform:rotate(0)}
+.experience-entry[open] .experience-toggle h3,.experience-toggle:focus-visible h3 {text-decoration-line:underline}
+.experience-entry[open] .experience-toggle:not(.is-current) {border-bottom-color:var(--accent)}
+.experience-toggle.is-current:focus-visible {outline-color:var(--ink)}
+.experience-entry[open] .experience-panel {animation:experience-reveal .32s steps(1,end) both}
+.experience-entry[open] .experience-panel:before {content:'';position:absolute;left:0;right:0;height:3px;background:linear-gradient(var(--accent),transparent);pointer-events:none;animation:experience-scan .34s steps(6,end) both}
+.experience-entry.is-glitching .experience-heading h3 {animation:experience-title-signal .31s steps(1,end)}
+@keyframes experience-reveal {0%{clip-path:inset(0 0 90%);opacity:.4;transform:translate(-4px,-6px)}20%{clip-path:inset(0 0 65%);opacity:.8;transform:translateX(5px)}40%{clip-path:polygon(0 0,100% 0,100% 41%,58% 41%,58% 55%,0 55%);transform:translateX(-3px)}65%{clip-path:inset(0 0 18%);opacity:1;transform:translateX(2px)}85%,100%{clip-path:inset(0);opacity:1;transform:translateX(0)}}
+@keyframes experience-title-signal {0%,100%{text-shadow:none}20%,60%{text-shadow:-2px 0 var(--line),2px 0 var(--accent)}40%,75%{text-shadow:2px 0 var(--line),-1px 0 var(--ink)}}
+@keyframes experience-scan {0%{top:0;opacity:0}15%{opacity:.65}100%{top:100%;opacity:0}}
+@media(hover:hover) {.experience-toggle:hover h3{text-decoration-line:underline}.experience-toggle:not(.is-current):hover h3{color:var(--accent)}.experience-toggle:hover .experience-toggle-icon{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}}
+@media(prefers-reduced-motion:reduce) {[data-scrambling]{text-shadow:none}.glitch-surface:before,.glitch-surface:after{display:none}.portrait-frame,.project-card{transition:none}.experience-entry[open] .experience-panel,.experience-entry[open] .experience-panel:before,.experience-entry.is-glitching .experience-heading h3{animation:none}.experience-toggle-icon:after{transition:none}}
