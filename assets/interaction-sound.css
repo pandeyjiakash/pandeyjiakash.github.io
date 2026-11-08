@@ -1,0 +1,10 @@
+.header-identity {display:flex;align-items:center;gap:12px;min-width:0}
+.header-identity .wordmark {align-self:auto}
+.sound-toggle {display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;min-width:44px;flex:none;color:var(--muted);border:1px solid transparent;touch-action:manipulation}
+.sound-toggle svg {display:block;width:18px;height:18px;pointer-events:none}
+.sound-toggle[aria-pressed=true] {color:var(--accent)}
+.sound-toggle[aria-pressed=true] .sound-icon-off,.sound-toggle[aria-pressed=false] .sound-icon-on {display:none}
+.sound-toggle:focus-visible {outline:2px solid var(--accent);outline-offset:2px}
+@media(hover:hover) and (pointer:fine) {
+  .sound-toggle:hover {color:var(--ink);border-color:var(--quiet-line)}
+}

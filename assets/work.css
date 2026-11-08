@@ -1,0 +1,89 @@
+/* Work-only composition: real categories, with the existing film/player interactions. */
+.page-work .work-intro {grid-template-columns:minmax(0,1fr);gap:24px;padding-bottom:28px}
+.page-work .work-intro>.work-title,.page-work .work-intro>.work-console {grid-column:auto;grid-row:auto}
+.page-work .work-intro>.work-console {display:block;max-width:360px;justify-self:start;align-self:end}
+
+/* The approved projector artwork is split into a body and two live reels.
+   Its mechanical keys are native HTML controls, not part of the image. */
+.page-work .work-intro>.projector-console {width:80%;max-width:272px;container-type:inline-size;isolation:isolate;padding:0;background:none;border:0;box-shadow:none;z-index:1}
+.projector-machine {position:relative;aspect-ratio:1.55;pointer-events:none;isolation:isolate}
+.projector-grade {position:absolute;overflow:hidden;pointer-events:none}
+/* Cool the cream highlights without shifting the pure cyan accents or alpha. */
+.projector-machine>img {filter:url(#projector-cool-tones)}
+.projector-body {position:absolute;left:0;top:56%;width:100%;height:auto;z-index:3}
+.projector-arm {position:absolute;top:29%;width:4%;height:40%;background:var(--ink);border-inline:2px solid var(--line);z-index:1}
+.projector-arm-left {left:21%}
+.projector-arm-right {left:64%}
+.projector-reel {position:absolute;height:auto;transform-origin:50% 50%;animation:projector-turn 12s linear infinite paused;z-index:2}
+.projector-reel-left {left:0;top:0;width:43%}
+.projector-reel-right {left:49%;top:9%;width:34%;animation-duration:9.5s}
+.projector-console[data-running=true] .projector-reel {animation-play-state:running}
+.page-work .projector-console .projector-controls {position:relative;display:grid;grid-template-columns:repeat(3,minmax(44px,1fr));gap:0;margin:0;padding:4px 3px 7px;border:1px solid var(--line);border-top:0;background:var(--surface);box-shadow:inset 0 -2px var(--accent);z-index:4}
+.projector-console .quick-film {position:relative;min-width:44px;min-height:44px;gap:0;border:1px solid var(--line);border-bottom-color:var(--ink);background:var(--bg);color:var(--ink);touch-action:manipulation;transition:background-color .14s,color .14s,transform .12s cubic-bezier(.16,1,.3,1)}
+.projector-console .quick-film+.quick-film {border-left-color:var(--quiet-line)}
+.projector-console .quick-film:after {content:'';position:absolute;left:30%;right:30%;bottom:5px;height:2px;background:var(--accent)}
+.projector-console .quick-film .mono {font-size:14px;line-height:1;padding-bottom:4px}
+.projector-console .quick-film:is(:hover,:focus-visible,:active) {background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.projector-console .quick-film:is(:hover,:focus-visible,:active):after {background:var(--on-accent)}
+.projector-console .quick-film:active {transform:translateY(2px)}
+.projector-console .quick-film:focus-visible {z-index:2;outline:2px solid var(--ink);outline-offset:2px}
+.projector-console .quick-film.is-selected:after {left:20%;right:20%;background:var(--ink)}
+@container(min-width:272px) {.page-work .projector-console .projector-controls {grid-template-columns:repeat(6,minmax(44px,1fr))}}
+.page-work .work-intro>.work-orbit {display:none}
+@keyframes projector-turn {to{transform:rotate(360deg)}}
+.film-dialog.is-projector-launch .film-shell {animation:projector-lock-on .28s steps(1,end)}
+@keyframes projector-lock-on {0%{clip-path:inset(0 0 55%);transform:translateX(-3px)}25%{clip-path:inset(12% 0 15%);transform:translateX(3px)}50%{clip-path:inset(0 0 20%);transform:translateX(-1px)}75%,100%{clip-path:inset(0);transform:none}}
+
+.work-category-nav {position:sticky;top:0;z-index:6;display:flex;align-items:center;flex-wrap:wrap;gap:4px clamp(8px,2.5vw,32px);padding-block:8px;margin-bottom:32px;background:var(--bg);border-block:1px solid var(--quiet-line)}
+.work-category-nav a {display:inline-flex;align-items:center;gap:8px;min-height:44px;padding-block:8px;font-size:14px;line-height:1.3;color:var(--ink);touch-action:manipulation}
+.work-category-nav [data-scramble] {display:inline-block}
+.work-category-nav svg {width:14px;height:14px;flex:none;color:var(--accent);transition:transform .14s cubic-bezier(.16,1,.3,1)}
+.work-category-nav a:focus-visible,.work-category-nav a.is-touch-active {color:var(--accent)}
+.work-category-nav a:focus-visible svg,.work-category-nav a.is-touch-active svg {transform:translateX(3px)}
+
+.work-group {scroll-margin-top:88px;padding-bottom:clamp(48px,6vw,96px);min-width:0}
+.work-group-heading {margin-bottom:28px;padding-bottom:16px;border-bottom:1px solid var(--quiet-line)}
+.work-group-heading h2 {font-family:var(--font-display);font-size:clamp(32px,5vw,64px);font-weight:600;line-height:1.05;letter-spacing:-.03em}
+.work-group-heading [data-scramble] {display:inline-block}
+.work-group:target .work-group-heading {border-bottom-color:var(--accent)}
+.work-group:target h2 {color:var(--accent)}
+.work-group:focus {outline:0}
+.work-group:focus-visible .work-group-heading {outline:2px solid var(--accent);outline-offset:6px}
+.work-group-grid {display:grid;grid-template-columns:minmax(0,1fr);gap:32px;padding-inline:6px;align-items:start}
+.page-work .work-group-grid>.project-card {grid-column:auto;grid-row:auto;align-self:start;justify-self:stretch;width:100%;--angle:-.35deg}
+.page-work .work-group-grid>.project-card:nth-child(even) {--angle:.55deg}
+.page-work .project-caption h3 {font-family:var(--font-display);font-size:clamp(22px,2.3vw,32px);font-weight:600;line-height:1.12;letter-spacing:-.03em;overflow-wrap:anywhere}
+.page-work .project-1 .project-caption h3 {font-size:clamp(28px,4.2vw,52px)}
+.page-work #mama-earth .project-caption {background:var(--accent);color:var(--on-accent)}
+.page-work #mama-earth .project-subtitle {color:var(--on-accent)}
+.page-work #mama-earth .play-label {background:var(--on-accent);color:var(--accent)}
+
+@media(min-width:700px) {
+  .page-work .work-intro {grid-template-columns:minmax(0,1fr) minmax(260px,320px);gap:32px;padding-bottom:32px}
+  .page-work .work-intro>.work-console {justify-self:end}
+  .work-category-nav {margin-bottom:40px}
+  .work-group-heading {margin-bottom:32px}
+  .work-group-grid {grid-template-columns:repeat(12,minmax(0,1fr));gap:clamp(28px,4vw,64px)}
+  .page-work .work-group-grid>#the-last-salute {grid-column:1/-1}
+  .page-work .work-group-grid>#tata-cars {grid-column:1/8}
+  .page-work .work-group-grid>#air-india {grid-column:8/-1;margin-top:clamp(32px,6vw,96px)}
+  .page-work .work-group-grid>#kia {grid-column:1/8}
+  .page-work .work-group-grid>#kreditbee {grid-column:8/-1;margin-top:clamp(40px,8vw,120px)}
+  .page-work .work-group-grid>#mama-earth {grid-column:4/-1}
+}
+@media(min-width:1000px) {
+  .page-work .work-intro {grid-template-columns:minmax(0,1fr) minmax(300px,360px);gap:48px}
+  .page-work .quick-films {grid-template-columns:repeat(6,minmax(0,1fr))}
+}
+@media(hover:hover) and (pointer:fine) {
+  .work-category-nav a:hover {color:var(--accent)}
+  .work-category-nav a:hover svg {transform:translateX(3px)}
+}
+@media(prefers-reduced-motion:reduce) {
+  .projector-reel {animation:none;transform:none}
+  .projector-console .quick-film {transition:background-color .12s,color .12s}
+  .projector-console .quick-film:active {transform:none}
+  .film-dialog.is-projector-launch .film-shell {animation:none}
+  .work-category-nav svg {transition:none}
+  .work-category-nav a:is(:hover,:focus-visible,.is-touch-active) svg {transform:none}
+}
