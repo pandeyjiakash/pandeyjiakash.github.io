@@ -103,6 +103,20 @@
   reduced.addEventListener('change', () => { if (reduced.matches) stopMotion(); });
   document.addEventListener('visibilitychange', () => { if (document.hidden) stopMotion(); });
 
+  const phoneReveal = document.querySelector('[data-phone-reveal]');
+  const phoneNumber = document.getElementById('contact-phone-number');
+  if (phoneReveal && phoneNumber) {
+    phoneNumber.hidden = true;
+    phoneReveal.hidden = false;
+    phoneReveal.disabled = false;
+    phoneReveal.addEventListener('click', () => {
+      phoneReveal.hidden = true;
+      phoneNumber.hidden = false;
+      activate(phoneNumber, 'glitch');
+      phoneNumber.focus({preventScroll: true});
+    });
+  }
+
   const brandStrip = document.querySelector('[data-brand-strip]');
   if (brandStrip) {
     const viewport = brandStrip.querySelector('.brand-viewport');

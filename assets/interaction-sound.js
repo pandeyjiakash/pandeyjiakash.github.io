@@ -225,7 +225,7 @@
     if (disabled(control)) return;
     // These own their sound at the actual state change, not at a second
     // delegated click. In particular a restored focus is never a cue.
-    if (control.matches('[data-service-shuffle],[data-service-choice],[data-pixel-portrait],[data-film],[data-preview-toggle],[data-contact-take],.experience-toggle,.brand-link,[data-trainer-secret] summary,[data-catch-trigger],[data-copy-trainer],.close-film,.next-film')) return;
+    if (control.matches('[data-service-shuffle],[data-service-choice],[data-pixel-portrait],[data-film],[data-preview-toggle],[data-contact-take],[data-phone-reveal],.experience-toggle,.brand-link,[data-trainer-secret] summary,[data-catch-trigger],[data-copy-trainer],.close-film,.next-film')) return;
     let cue = 'hover';
     if (control.matches('[data-glitch-trigger]')) cue = 'glitch';
     else if (control.matches('summary')) cue = 'open';

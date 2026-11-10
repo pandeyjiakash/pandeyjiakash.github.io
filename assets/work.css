@@ -1,36 +1,51 @@
 /* Work-only composition: real categories, with the existing film/player interactions. */
-.page-work .work-intro {grid-template-columns:minmax(0,1fr);gap:24px;padding-bottom:28px}
+.page-work .work-intro {--projector-size:clamp(200px,calc(130px + 6.2vw),480px);--projector-inset:clamp(24px,3vw,64px);--projector-perspective:calc(var(--projector-size)*1.45);grid-template-columns:minmax(0,1fr);gap:24px;padding-bottom:28px}
 .page-work .work-intro>.work-title,.page-work .work-intro>.work-console {grid-column:auto;grid-row:auto}
 .page-work .work-intro>.work-console {display:block;max-width:360px;justify-self:start;align-self:end}
 
-/* The approved projector artwork is split into a body and two live reels.
-   Its mechanical keys are native HTML controls, not part of the image. */
-.page-work .work-intro>.projector-console {width:80%;max-width:272px;container-type:inline-size;isolation:isolate;padding:0;background:none;border:0;box-shadow:none;z-index:1}
-.projector-machine {position:relative;aspect-ratio:1.55;pointer-events:none;isolation:isolate}
-.projector-grade {position:absolute;overflow:hidden;pointer-events:none}
-/* Cool the cream highlights without shifting the pure cyan accents or alpha. */
-.projector-machine>img {filter:url(#projector-cool-tones)}
-.projector-body {position:absolute;left:0;top:56%;width:100%;height:auto;z-index:3}
-.projector-arm {position:absolute;top:29%;width:4%;height:40%;background:var(--ink);border-inline:2px solid var(--line);z-index:1}
-.projector-arm-left {left:21%}
-.projector-arm-right {left:64%}
-.projector-reel {position:absolute;height:auto;transform-origin:50% 50%;animation:projector-turn 12s linear infinite paused;z-index:2}
-.projector-reel-left {left:0;top:0;width:43%}
-.projector-reel-right {left:49%;top:9%;width:34%;animation-duration:9.5s}
-.projector-console[data-running=true] .projector-reel {animation-play-state:running}
-.page-work .projector-console .projector-controls {position:relative;display:grid;grid-template-columns:repeat(3,minmax(44px,1fr));gap:0;margin:0;padding:4px 3px 7px;border:1px solid var(--line);border-top:0;background:var(--surface);box-shadow:inset 0 -2px var(--accent);z-index:4}
-.projector-console .quick-film {position:relative;min-width:44px;min-height:44px;gap:0;border:1px solid var(--line);border-bottom-color:var(--ink);background:var(--bg);color:var(--ink);touch-action:manipulation;transition:background-color .14s,color .14s,transform .12s cubic-bezier(.16,1,.3,1)}
-.projector-console .quick-film+.quick-film {border-left-color:var(--quiet-line)}
-.projector-console .quick-film:after {content:'';position:absolute;left:30%;right:30%;bottom:5px;height:2px;background:var(--accent)}
-.projector-console .quick-film .mono {font-size:14px;line-height:1;padding-bottom:4px}
-.projector-console .quick-film:is(:hover,:focus-visible,:active) {background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+/* Size the artwork by the available screen, independently of pointer type.
+   Reserve its floating reel's headroom instead of painting into the header. */
+.page-work .work-intro>.projector-console {width:var(--projector-size);max-width:100%;justify-self:center;container-type:inline-size;isolation:isolate;padding:calc(var(--projector-size)*.08 + 2px) 0 0;background:none;border:0;box-shadow:none;z-index:1}
+.projector-machine {position:relative;aspect-ratio:1.75;pointer-events:none;isolation:isolate;perspective:calc(var(--projector-size)*3.9)}
+.holo-dock {position:absolute;left:-8%;top:18%;width:116%;max-width:none;height:auto;z-index:4}
+.holo-reel-float {position:absolute;left:14%;top:-12%;width:43%;z-index:5;animation:holo-reel-float 5s ease-in-out infinite paused}
+.holo-reel-perspective {display:block;transform:perspective(calc(var(--projector-size)*1.77)) rotateY(-17deg);transform-style:preserve-3d}
+.projector-reel {display:block;width:100%;height:auto;transform-origin:50% 50%;animation:projector-turn 14s linear infinite paused}
+.holo-beam {position:absolute;z-index:2;opacity:.64;animation:holo-beam-breathe 4s ease-in-out infinite paused}
+.holo-beam-up {left:23%;top:40%;width:35%;height:43%;clip-path:polygon(0 0,100% 0,62% 100%,40% 100%);background:linear-gradient(0deg,rgb(0 240 255 / .6),rgb(0 240 255 / .02))}
+.holo-beam-lens {left:67%;top:20%;width:31%;height:59%;clip-path:polygon(0 100%,8% 85%,100% 0,100% 50%);background:linear-gradient(35deg,rgb(0 240 255 / .02),rgb(0 240 255 / .32))}
+.holo-film-strip {--perf-height:clamp(4px,3cqi,9px);--perf-step:clamp(7px,5cqi,18px);--perf-bar:clamp(2px,1.4cqi,5px);position:absolute;left:43%;top:6%;width:46%;padding-block:var(--perf-height);z-index:3;transform-origin:left center;background:rgb(0 240 255 / .08);transform:perspective(var(--projector-perspective)) rotateY(-20deg) rotateZ(-3deg);animation:holo-film-float 5.8s ease-in-out infinite paused}
+.holo-film-strip:before,.holo-film-strip:after {content:'';position:absolute;left:0;right:0;height:var(--perf-height);border-block:1px solid rgb(0 240 255 / .7);background:repeating-linear-gradient(90deg,rgb(0 240 255 / .75) 0 var(--perf-bar),transparent var(--perf-bar) var(--perf-step));animation:holo-film-feed 2.8s linear infinite paused}
+.holo-film-strip:before {top:0}
+.holo-film-strip:after {bottom:0}
+.holo-film-frames {display:flex}
+.holo-empty-frame {flex:0 0 38%;border:1px solid rgb(0 240 255 / .46);border-radius:2px}
+.holo-film-window {display:block;position:relative;flex:1;min-width:0;aspect-ratio:16/9;border:1px solid rgb(126 250 255 / .85);border-radius:3px;overflow:hidden;background:#07313a}
+.holo-film-window>img,.holo-film-window>video {position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:grayscale(1) contrast(1.15)}
+.holo-film-window>video {opacity:0}
+.projector-console[data-projecting=true] .holo-film-window>video {opacity:1}
+.holo-film-window:before {content:'';position:absolute;inset:0;z-index:1;background:var(--accent);mix-blend-mode:color;opacity:.72}
+.holo-film-window:after {content:'';position:absolute;inset:0 0 auto;height:1px;z-index:2;background:rgb(243 252 253 / .5);animation:holo-projection-scan 3.2s linear infinite paused}
+.projector-console[data-running=true] :is(.projector-reel,.holo-reel-float,.holo-beam,.holo-film-strip),.projector-console[data-running=true] .holo-film-window:after,.projector-console[data-running=true] .holo-film-strip:before,.projector-console[data-running=true] .holo-film-strip:after {animation-play-state:running}
+.page-work .projector-console .projector-controls {position:relative;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:3px;width:76%;margin:0 auto;padding:3px 4px;border:0;background:none;box-shadow:none;isolation:isolate;z-index:6}
+.projector-controls:before {content:'';position:absolute;inset:-4px -3px -3px;z-index:-1;background:url('./projector/holo-deck-v1.webp') center/100% 140% no-repeat;pointer-events:none}
+.projector-console .quick-film {grid-column:span 3;position:relative;min-width:24px;min-height:clamp(26px,13cqi,44px);gap:0;border:1px solid #669aa3;border-radius:4px;background:linear-gradient(160deg,#18343c 0%,#040b0e 26%,#020609 70%,#10313a);box-shadow:inset 0 1px rgb(243 252 253 / .24),inset 0 -2px rgb(0 240 255 / .17);color:var(--ink);touch-action:manipulation;transition:background-color .14s,color .14s,transform .12s cubic-bezier(.16,1,.3,1)}
+.projector-console .quick-film+.quick-film {border-left-color:#669aa3}
+.projector-console .quick-film:nth-child(n+5) {grid-column:span 4}
+.projector-console .quick-film:after {content:'';position:absolute;left:24%;right:24%;bottom:4px;height:2px;background:var(--accent);box-shadow:0 1px 2px rgb(0 240 255 / .3)}
+.projector-console .quick-film .mono {font-size:clamp(13px,7cqi,20px);line-height:1;padding-bottom:4px}
+.projector-console .quick-film:is(:hover,:focus-visible,:active) {background:var(--accent);color:var(--on-accent);border-color:var(--ink)}
 .projector-console .quick-film:is(:hover,:focus-visible,:active):after {background:var(--on-accent)}
-.projector-console .quick-film:active {transform:translateY(2px)}
+.projector-console .quick-film:active {transform:translateY(1px)}
 .projector-console .quick-film:focus-visible {z-index:2;outline:2px solid var(--ink);outline-offset:2px}
-.projector-console .quick-film.is-selected:after {left:20%;right:20%;background:var(--ink)}
-@container(min-width:272px) {.page-work .projector-console .projector-controls {grid-template-columns:repeat(6,minmax(44px,1fr))}}
+.projector-console .quick-film.is-selected:after {left:18%;right:18%;background:var(--ink)}
 .page-work .work-intro>.work-orbit {display:none}
 @keyframes projector-turn {to{transform:rotate(360deg)}}
+@keyframes holo-reel-float {0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+@keyframes holo-beam-breathe {0%,100%{opacity:.5}50%{opacity:.82}}
+@keyframes holo-film-feed {to{background-position:calc(var(--perf-step)*-4) 0}}
+@keyframes holo-film-float {0%,100%{transform:perspective(var(--projector-perspective)) rotateY(-20deg) rotateZ(-3deg)}50%{transform:perspective(var(--projector-perspective)) translateY(-2px) rotateY(-17deg) rotateZ(-2deg)}}
+@keyframes holo-projection-scan {to{transform:translateY(calc(var(--projector-size)*.17))}}
 .film-dialog.is-projector-launch .film-shell {animation:projector-lock-on .28s steps(1,end)}
 @keyframes projector-lock-on {0%{clip-path:inset(0 0 55%);transform:translateX(-3px)}25%{clip-path:inset(12% 0 15%);transform:translateX(3px)}50%{clip-path:inset(0 0 20%);transform:translateX(-1px)}75%,100%{clip-path:inset(0);transform:none}}
 
@@ -50,8 +65,10 @@
 .work-group:focus {outline:0}
 .work-group:focus-visible .work-group-heading {outline:2px solid var(--accent);outline-offset:6px}
 .work-group-grid {display:grid;grid-template-columns:minmax(0,1fr);gap:32px;padding-inline:6px;align-items:start}
-.page-work .work-group-grid>.project-card {grid-column:auto;grid-row:auto;align-self:start;justify-self:stretch;width:100%;--angle:-.35deg}
+.page-work .work-group-grid>.project-card {grid-column:auto;grid-row:auto;align-self:start;justify-self:stretch;width:100%;margin-top:0;--angle:-.35deg}
 .page-work .work-group-grid>.project-card:nth-child(even) {--angle:.55deg}
+.page-work .work-group-grid .double-frame {padding:0}
+.page-work .work-group-grid .project-image {width:100%;aspect-ratio:16/9}
 .page-work .project-caption h3 {font-family:var(--font-display);font-size:clamp(22px,2.3vw,32px);font-weight:600;line-height:1.12;letter-spacing:-.03em;overflow-wrap:anywhere}
 .page-work .project-1 .project-caption h3 {font-size:clamp(28px,4.2vw,52px)}
 .page-work #mama-earth .project-caption {background:var(--accent);color:var(--on-accent)}
@@ -59,28 +76,27 @@
 .page-work #mama-earth .play-label {background:var(--on-accent);color:var(--accent)}
 
 @media(min-width:700px) {
-  .page-work .work-intro {grid-template-columns:minmax(0,1fr) minmax(260px,320px);gap:32px;padding-bottom:32px}
+  .page-work .work-intro {grid-template-columns:minmax(0,1fr) calc(var(--projector-size) + var(--projector-inset));gap:32px;padding-bottom:32px}
   .page-work .work-intro>.work-console {justify-self:end}
+  .page-work .work-intro>.projector-console {margin-inline-end:var(--projector-inset)}
   .work-category-nav {margin-bottom:40px}
   .work-group-heading {margin-bottom:32px}
-  .work-group-grid {grid-template-columns:repeat(12,minmax(0,1fr));gap:clamp(28px,4vw,64px)}
-  .page-work .work-group-grid>#the-last-salute {grid-column:1/-1}
-  .page-work .work-group-grid>#tata-cars {grid-column:1/8}
-  .page-work .work-group-grid>#air-india {grid-column:8/-1;margin-top:clamp(32px,6vw,96px)}
-  .page-work .work-group-grid>#kia {grid-column:1/8}
-  .page-work .work-group-grid>#kreditbee {grid-column:8/-1;margin-top:clamp(40px,8vw,120px)}
-  .page-work .work-group-grid>#mama-earth {grid-column:4/-1}
+  .work-group-grid {grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(28px,4vw,64px)}
 }
 @media(min-width:1000px) {
-  .page-work .work-intro {grid-template-columns:minmax(0,1fr) minmax(300px,360px);gap:48px}
-  .page-work .quick-films {grid-template-columns:repeat(6,minmax(0,1fr))}
+  .page-work .work-intro {gap:48px}
 }
 @media(hover:hover) and (pointer:fine) {
   .work-category-nav a:hover {color:var(--accent)}
   .work-category-nav a:hover svg {transform:translateX(3px)}
 }
+@media(pointer:coarse) {
+  .page-work .projector-console .projector-controls {width:max(76%,176px);gap:0;padding:0}
+  .projector-console .quick-film {min-width:44px;min-height:44px;border:4px solid transparent;background-clip:padding-box;box-shadow:inset 0 0 0 1px #669aa3,inset 0 -2px rgb(0 240 255 / .17)}
+  .projector-console .quick-film+.quick-film,.projector-console .quick-film:is(:hover,:focus-visible,:active) {border-color:transparent;background-clip:padding-box}
+}
 @media(prefers-reduced-motion:reduce) {
-  .projector-reel {animation:none;transform:none}
+  .projector-reel,.holo-reel-float,.holo-beam,.holo-film-strip,.holo-film-strip:before,.holo-film-strip:after,.holo-film-window:after {animation:none}
   .projector-console .quick-film {transition:background-color .12s,color .12s}
   .projector-console .quick-film:active {transform:none}
   .film-dialog.is-projector-launch .film-shell {animation:none}

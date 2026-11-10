@@ -35,11 +35,117 @@
   }
   const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
   const projector = document.querySelector('[data-projector]');
+  const projection = projector?.querySelector('[data-projector-preview]');
+  const projectionPoster = projector?.querySelector('[data-projector-poster]');
   let projectorVisible = !('IntersectionObserver' in window);
+  let projectorPageActive = true;
+  let projectionRequest = 0;
+  let projectionPending = false;
+  let projectionSource = '';
+  let projectionFailedSource = '';
+  let projectionFinished = false;
+  let projectionFilmId = projection?.dataset.filmId || '';
+  let projectionBag = shuffledProjectionIds().filter(id => id !== projectionFilmId);
+  function shuffledProjectionIds() {
+    const ids = projects.map(project => project.id);
+    for (let index = ids.length - 1; index > 0; index--) {
+      const other = Math.floor(Math.random() * (index + 1));
+      [ids[index], ids[other]] = [ids[other], ids[index]];
+    }
+    if (ids.length > 1 && ids[0] === projectionFilmId) [ids[0], ids[1]] = [ids[1], ids[0]];
+    return ids;
+  }
+  function highlightProjection(id) {
+    projector?.querySelectorAll('[data-projector-key]').forEach(key => key.classList.toggle('is-selected', key.dataset.film === id));
+  }
+  function advanceProjection() {
+    if (!projectionBag.length) projectionBag = shuffledProjectionIds();
+    const id = projectionBag.shift();
+    const project = projects.find(item => item.id === id);
+    if (project) selectProjection(project);
+  }
+  function projectorCanRun() {
+    return projectorPageActive && projectorVisible && !reduced.matches && !document.hidden && !dialog.open;
+  }
+  function stopProjection() {
+    if (!projection) return;
+    projectionRequest++;
+    projectionPending = false;
+    projection.pause();
+    projector.dataset.projecting = 'false';
+  }
   function syncProjector() {
-    if (projector) projector.dataset.running = String(projectorVisible && !reduced.matches && !document.hidden && !dialog.open);
+    if (!projector) return;
+    const running = projectorCanRun();
+    projector.dataset.running = String(running);
+    if (!projection) return;
+    if (!running || navigator.connection?.saveData) {stopProjection(); return;}
+    if (projectionFinished) advanceProjection();
+    const source = projection.dataset.previewSrc;
+    if (!source || source === projectionFailedSource) return;
+    if (projectionSource !== source) {
+      stopProjection();
+      projectionSource = source;
+      projection.preload = 'auto';
+      projection.src = source;
+      projection.load();
+    }
+    if (projectionPending || !projection.paused) return;
+    const request = ++projectionRequest;
+    projectionPending = true;
+    projection.muted = true;
+    const failed = () => {
+      if (request !== projectionRequest) return;
+      projectionFailedSource = source;
+      stopProjection();
+    };
+    try {
+      Promise.resolve(projection.play()).then(() => {
+        if (request !== projectionRequest) {
+          if (!projectorCanRun()) projection.pause();
+          return;
+        }
+        projectionPending = false;
+        if (!projectorCanRun()) {stopProjection(); return;}
+        projector.dataset.projecting = 'true';
+      }).catch(failed);
+    } catch (_) {failed();}
+  }
+  function selectProjection(project) {
+    const mediaQuery = project.mediaVersion ? `?v=${encodeURIComponent(project.mediaVersion)}` : '';
+    const poster = `../assets/images/${project.id}.jpg${mediaQuery}`;
+    projectionFilmId = project.id;
+    projectionBag = projectionBag.filter(id => id !== projectionFilmId);
+    projectionFinished = false;
+    highlightProjection(project.id);
+    if (projectionPoster) projectionPoster.src = poster;
+    if (!projection) return;
+    stopProjection();
+    projection.dataset.filmId = project.id;
+    projection.dataset.previewSrc = `../assets/video/previews/${project.id}.mp4${mediaQuery}`;
+    projection.poster = poster;
+    projectionFailedSource = '';
   }
   if (projector) {
+    if (projection) {
+      projection.muted = true;
+      projection.defaultMuted = true;
+      projection.loop = false;
+      projection.playsInline = true;
+      highlightProjection(projectionFilmId);
+      projection.addEventListener('ended', () => {
+        if (projectionSource !== projection.dataset.previewSrc) return;
+        projectionFinished = true;
+        if (projectorCanRun()) syncProjector();
+      });
+      projection.addEventListener('error', () => {
+        projectionFailedSource = projectionSource;
+        stopProjection();
+        projection.removeAttribute('src');
+        projectionSource = '';
+        projection.load();
+      });
+    }
     if ('IntersectionObserver' in window) {
       new IntersectionObserver(entries => {
         projectorVisible = entries[0].isIntersecting;
@@ -47,8 +153,8 @@
       }).observe(projector);
     }
     reduced.addEventListener('change', syncProjector);
-    window.addEventListener('pageshow', syncProjector);
-    window.addEventListener('pagehide', () => { projector.dataset.running = 'false'; });
+    window.addEventListener('pageshow', () => {projectorPageActive = true; syncProjector();});
+    window.addEventListener('pagehide', () => {projectorPageActive = false; syncProjector();});
     syncProjector();
   }
   const previews = Array.from(document.querySelectorAll('.project-open')).map(link => ({
@@ -176,9 +282,9 @@
     restoringFocus = true;
     selected = index;
     const project = projects[index];
+    selectProjection(project);
     if (projector) {
       dialog.classList.toggle('is-projector-launch', fromProjector && !reduced.matches);
-      projector.querySelectorAll('[data-projector-key]').forEach(key => key.classList.toggle('is-selected', key.dataset.film === project.id));
     }
     error.hidden = true;
     dialog.querySelector('#film-title').textContent = project.title;
